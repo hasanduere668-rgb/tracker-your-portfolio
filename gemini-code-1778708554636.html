@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<title>US MARKET - Pro Dashboard V4</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Bebas+Neue&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #050505; --surface: #111; --border: rgba(255,255,255,0.08);
+    --text: #f0ede8; --muted: #888; --up: #00e5a0; --accent: #f5c842;
+    --cyan: #00ffff; --blue: #0044ff; --red: #ff0000;
+    --font-display: 'Bebas Neue', sans-serif; --font-mono: 'DM Mono', monospace;
+  }
+  html { background: var(--bg); color: var(--text); font-family: var(--font-mono); }
+  .wrapper { max-width: 1550px; margin: 0 auto; padding: 20px; }
+  
+  .nav-tabs { display: flex; gap: 20px; margin-bottom: 30px; border-bottom: 1px solid var(--border); }
+  .tab-btn { background: none; border: none; color: var(--muted); font-family: var(--font-display); font-size: 24px; cursor: pointer; padding: 10px 20px; transition: 0.3s; }
+  .tab-btn.active { color: var(--accent); border-bottom: 3px solid var(--accent); }
+  .page { display: none; }
+  .page.active { display: block; }
+
+  .manual-form { background: #0a0a0a; padding: 20px; border-radius: 4px; display: grid; grid-template-columns: 1.5fr repeat(6, 1fr) 1.2fr; gap: 10px; margin-bottom: 40px; border: 1px solid var(--border); align-items: end; }
+  .input-group { display: flex; flex-direction: column; gap: 6px; }
+  .input-group label { font-size: 9px; color: var(--muted); text-transform: uppercase; }
+  input { background: #000; border: 1px solid #222; color: #fff; padding: 12px; font-family: var(--font-mono); outline: none; border-radius: 4px; font-size: 14px; width: 100%; box-sizing: border-box; }
+  .btn-add { background: var(--accent); color: #000; border: none; padding: 10px; cursor: pointer; font-weight: bold; border-radius: 4px; height: 45px; font-size: 14px; transition: 0.2s; }
+  .btn-add:hover { filter: brightness(1.2); }
+
+  .stock-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); gap: 25px; }
+  .stock-card { background: var(--surface); padding: 25px; border-radius: 8px; border: 1px solid var(--border); position: relative; }
+  .ticker { font-family: var(--font-display); font-size: 42px; color: var(--accent); line-height: 1; }
+  .price { font-family: var(--font-display); font-size: 60px; color: var(--up); line-height: 1; margin: 10px 0; }
+  .chart-img { width: 100%; border-radius: 4px; margin-bottom: 20px; border: 1px solid #222; }
+  
+  .action-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .action-table th { text-align: left; color: var(--muted); padding-bottom: 10px; font-size: 10px; text-transform: uppercase; }
+  .action-table td { padding: 10px 5px; border-bottom: 1px solid rgba(255,255,255,0.03); }
+  .action-table td:nth-child(2), .action-table td:last-child { text-align: right; }
+  
+  .st-near { color: var(--cyan); font-weight: bold; }
+  .st-break { color: var(--blue); font-weight: bold; }
+  .st-cut { color: var(--red); font-weight: bold; }
+  .card-alert-red { border: 2px solid var(--red) !important; }
+
+  .remove-btn { position: absolute; top: 15px; right: 15px; cursor: pointer; color: #444; border: none; background: none; font-size: 24px; }
+  .scanner-box { background: var(--surface); padding: 40px; border-radius: 8px; border: 1px solid var(--border); max-width: 800px; margin: 0 auto; }
+  
+  .btn-scanner-add { background: var(--accent); color: #000; border: none; padding: 12px 25px; font-weight: bold; border-radius: 4px; cursor: pointer; margin-top: 20px; width: 100%; font-family: var(--font-mono); }
+</style>
+</head>
+<body>
+
+<div class="wrapper">
+  <div class="nav-tabs">
+    <button class="tab-btn active" id="tab-portfolio" onclick="switchPage('portfolio')">MAIN PORTFOLIO</button>
+    <button class="tab-btn" id="tab-scanner" onclick="switchPage('scanner')">FIBO SCANNER</button>
+  </div>
+
+  <div id="portfolio" class="page active">
+    <div class="manual-form">
+      <div class="input-group"><label>Ticker</label><input type="text" id="t-m" placeholder="NVDA"></div>
+      <div class="input-group"><label>ขาย 3</label><input type="number" id="r3-m" step="0.01"></div>
+      <div class="input-group"><label>ขาย 2</label><input type="number" id="r2-m" step="0.01"></div>
+      <div class="input-group"><label>ขาย 1</label><input type="number" id="r1-m" step="0.01"></div>
+      <div class="input-group"><label>ซื้อ 1</label><input type="number" id="s1-m" step="0.01"></div>
+      <div class="input-group"><label>ซื้อ 2</label><input type="number" id="s2-m" step="0.01"></div>
+      <div class="input-group"><label>คัท (S3)</label><input type="number" id="s3-m" step="0.01"></div>
+      <button class="btn-add" onclick="addManual()">+ เพิ่มหุ้น</button>
+    </div>
+    <div id="portfolio-grid" class="stock-grid"></div>
+  </div>
+
+  <div id="scanner" class="page">
+    <div class="scanner-box">
+      <h2 style="font-family: var(--font-display); font-size: 36px; margin:0;">FIBO SCANNER</h2>
+      <div class="input-group" style="margin-top: 20px;">
+        <label>ป้อน Ticker เพื่อวิเคราะห์ (Auto-Fibo)</label>
+        <div style="display:flex; gap:10px;">
+            <input type="text" id="t-scan" placeholder="เช่น AVGO" onkeypress="if(event.key==='Enter') scanFibo()">
+            <button class="btn-add" style="width:120px;" onclick="scanFibo()">SCAN</button>
+        </div>
+      </div>
+      
+      <div id="scan-result" style="display:none; margin-top:30px; border-top:1px solid #222; padding-top:20px;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-end;">
+            <div>
+                <div class="ticker" id="res-ticker">---</div>
+                <div class="price" id="res-price">$0.00</div>
+            </div>
+            <button class="btn-scanner-add" id="btn-auto-add" onclick="transferToPortfolio()">+ ADD TO PORTFOLIO</button>
+        </div>
+        <img id="res-chart" class="chart-img" style="margin-top:15px;" src="">
+        <table class="action-table">
+            <thead><tr><th>แผนเทรด (Fibo Level)</th><th>เป้าหมาย</th><th>ระยะ %</th></tr></thead>
+            <tbody id="scan-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_KEY = 'd82b00hr01qmgc0fd10gd82b00hr01qmgc0fd110';
+let tickers = JSON.parse(localStorage.getItem('pct_list')) || [];
+let cache = JSON.parse(localStorage.getItem('pct_data')) || {};
+let currentScanData = null;
+
+function switchPage(pId) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(pId).classList.add('active');
+  document.getElementById('tab-' + pId).classList.add('active');
+}
+
+function getPctInfo(current, target, type) {
+  if (!target || !current) return { dist: '—', status: '' };
+  const diffPct = ((target - current) / current) * 100;
+  let status = '';
+  if (type === 'R') {
+    if (current >= target) status = 'st-break';
+    else if (Math.abs(diffPct) <= 5) status = 'st-near';
+  } else if (type === 'S') {
+    if (current <= target) status = 'st-break';
+    else if (Math.abs(diffPct) <= 5) status = 'st-near';
+  } else if (type === 'CUT') {
+    if (current <= target) status = 'st-cut';
+  }
+  return { dist: (diffPct > 0 ? '+' : '') + diffPct.toFixed(2) + '%', status };
+}
+
+function addManual() {
+  const t = document.getElementById('t-m').value.toUpperCase().trim();
+  if(!t) return;
+  
+  const data = {
+    r3: document.getElementById('r3-m').value, r2: document.getElementById('r2-m').value, r1: document.getElementById('r1-m').value,
+    s1: document.getElementById('s1-m').value, s2: document.getElementById('s2-m').value, s3: document.getElementById('s3-m').value,
+    price: 0
+  };
+  
+  processAdd(t, data);
+  document.querySelectorAll('.manual-form input').forEach(i => i.value = '');
+}
+
+async function processAdd(ticker, data) {
+  if(!tickers.includes(ticker)) tickers.unshift(ticker);
+  cache[ticker] = data;
+  saveData(); 
+  await updatePrice(ticker);
+  renderPortfolio();
+}
+
+function saveData() {
+  localStorage.setItem('pct_list', JSON.stringify(tickers));
+  localStorage.setItem('pct_data', JSON.stringify(cache));
+}
+
+async function updatePrice(t) {
+  try {
+    const res = await fetch(`https://finnhub.io/api/v1/quote?symbol=${t}&token=${API_KEY}`);
+    const d = await res.json();
+    if(d.c) { cache[t].price = d.c; renderPortfolio(); }
+  } catch(e) { console.error(e); }
+}
+
+function renderPortfolio() {
+  const grid = document.getElementById('portfolio-grid');
+  grid.innerHTML = tickers.map(t => {
+    const d = cache[t];
+    const p = d.price || 0;
+    const cutInfo = getPctInfo(p, d.s3, 'CUT');
+    const levels = [
+        { n: 'ขาย 3 (R3)', v: d.r3, ty: 'R' }, { n: 'ขาย 2 (R2)', v: d.r2, ty: 'R' }, { n: 'ขาย 1 (R1)', v: d.r1, ty: 'R' },
+        { n: 'ซื้อ 1 (S1)', v: d.s1, ty: 'S' }, { n: 'ซื้อ 2 (S2)', v: d.s2, ty: 'S' }, { n: 'คัท (S3)', v: d.s3, ty: 'CUT' }
+    ];
+    return `<div class="stock-card ${cutInfo.status === 'st-cut' ? 'card-alert-red' : ''}">
+      <button class="remove-btn" onclick="remove('${t}')">×</button>
+      <div class="ticker">${t}</div><div class="price">$${p.toFixed(2)}</div>
+      <img class="chart-img" src="https://charts2.finviz.com/chart.ashx?t=${t}&ty=c&ta=1&p=d&s=l">
+      <table class="action-table">
+        <thead><tr><th>แผนเทรด</th><th>เป้าหมาย</th><th>ระยะ %</th></tr></thead>
+        <tbody>${levels.map(l => {
+          const info = getPctInfo(p, l.v, l.ty);
+          return `<tr><td>${l.n}</td><td>${l.v ? '$'+l.v : '—'}</td><td class="${info.status}">${info.dist}</td></tr>`;
+        }).join('')}</tbody>
+      </table>
+    </div>`;
+  }).join('');
+}
+
+function remove(t) {
+  if(confirm('ลบ ' + t + '?')) {
+    tickers = tickers.filter(x => x !== t); delete cache[t];
+    saveData(); renderPortfolio();
+  }
+}
+
+async function scanFibo() {
+  const t = document.getElementById('t-scan').value.toUpperCase().trim();
+  if(!t) return;
+  document.getElementById('scan-result').style.display = 'none';
+  
+  try {
+    const res = await fetch(`https://finnhub.io/api/v1/stock/metric?symbol=${t}&metric=all&token=${API_KEY}`);
+    const data = await res.json();
+    const qRes = await fetch(`https://finnhub.io/api/v1/quote?symbol=${t}&token=${API_KEY}`);
+    const qData = await qRes.json();
+    
+    if(data.metric && qData.c) {
+      const h = data.metric['52WeekHigh'], l = data.metric['52WeekLow'], p = qData.c, range = h - l;
+      
+      currentScanData = {
+          ticker: t,
+          price: p,
+          levels: {
+            r3: (h + (range * 0.618)).toFixed(2),
+            r2: (h + (range * 0.382)).toFixed(2),
+            r1: (h + (range * 0.236)).toFixed(2),
+            s1: (h - (range * 0.236)).toFixed(2),
+            s2: (h - (range * 0.382)).toFixed(2),
+            s3: (h - (range * 0.500)).toFixed(2)
+          }
+      };
+
+      const tableRows = [
+          { n: 'แนวต้าน 3 (61.8%)', v: currentScanData.levels.r3, ty: 'R' },
+          { n: 'แนวต้าน 2 (38.2%)', v: currentScanData.levels.r2, ty: 'R' },
+          { n: 'แนวต้าน 1 (23.6%)', v: currentScanData.levels.r1, ty: 'R' },
+          { n: 'แนวรับ 1 (23.6%)', v: currentScanData.levels.s1, ty: 'S' },
+          { n: 'แนวรับ 2 (38.2%)', v: currentScanData.levels.s2, ty: 'S' },
+          { n: 'จุดคัท (50.0%)', v: currentScanData.levels.s3, ty: 'CUT' }
+      ];
+
+      document.getElementById('res-ticker').innerText = t;
+      document.getElementById('res-price').innerText = '$' + p.toFixed(2);
+      document.getElementById('res-chart').src = `https://charts2.finviz.com/chart.ashx?t=${t}&ty=c&ta=1&p=d&s=l`;
+      document.getElementById('scan-tbody').innerHTML = tableRows.map(f => {
+          const info = getPctInfo(p, f.v, f.ty);
+          return `<tr><td>${f.n}</td><td>$${f.v}</td><td class="${info.status}">${info.dist}</td></tr>`;
+      }).join('');
+      document.getElementById('scan-result').style.display = 'block';
+    }
+  } catch(e) { alert('ไม่พบข้อมูลหุ้นตัวนี้'); }
+}
+
+function transferToPortfolio() {
+    if(!currentScanData) return;
+    processAdd(currentScanData.ticker, { ...currentScanData.levels, price: currentScanData.price });
+    alert(`เพิ่ม ${currentScanData.ticker} เข้า Portfolio เรียบร้อยแล้ว!`);
+    switchPage('portfolio');
+}
+
+setInterval(() => { tickers.forEach(t => updatePrice(t)); }, 60000);
+window.onload = () => renderPortfolio();
+</script>
+</body>
+</html>
