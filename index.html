@@ -2,113 +2,578 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8" />
-<title>US MARKET - Pro Dashboard V5</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>US MARKET - Integrated Suite & AI Analyst</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Bebas+Neue&display=swap" rel="stylesheet" />
+<!-- โหลด Marked.js เพื่อให้เรนเดอร์ Markdown จาก Gemini ได้อย่างสวยงาม -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <style>
   :root {
     --bg: #050505; --surface: #111; --border: rgba(255,255,255,0.08);
-    --text: #f0ede8; --muted: #888; --up: #00e5a0; --accent: #f5c842;
-    --cyan: #00ffff; --blue: #0044ff; --red: #ff0000;
-    --font-display: 'Bebas Neue', sans-serif; --font-mono: 'DM Mono', monospace;
+    --text: #f0ede8; --muted: #888; --up: #00e5a0; --down: #ff3b30; --accent: #f5c842;
+    --cyan: #00ffff; --purple: #a855f7; --blue: #0044ff; --font-display: 'Bebas Neue', sans-serif; --font-mono: 'DM Mono', monospace;
   }
   html { background: var(--bg); color: var(--text); font-family: var(--font-mono); }
+  body { margin: 0; padding: 0; }
   .wrapper { max-width: 1550px; margin: 0 auto; padding: 20px; }
   
-  .nav-tabs { display: flex; gap: 20px; margin-bottom: 30px; border-bottom: 1px solid var(--border); }
-  .tab-btn { background: none; border: none; color: var(--muted); font-family: var(--font-display); font-size: 24px; cursor: pointer; padding: 10px 20px; transition: 0.3s; }
+  /* Header Area */
+  .header-section { margin-bottom: 25px; border-bottom: 1px solid var(--border); padding-bottom: 15px; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 15px; }
+  .title-display { font-family: var(--font-display); font-size: 38px; color: var(--accent); margin: 0; letter-spacing: 1px; line-height: 1; }
+  
+  /* Tabs Navigation */
+  .nav-tabs { display: flex; gap: 10px; margin-bottom: 25px; border-bottom: 1px solid var(--border); overflow-x: auto; }
+  .tab-btn { background: none; border: none; color: var(--muted); font-family: var(--font-display); font-size: 22px; cursor: pointer; padding: 12px 20px; transition: 0.2s; white-space: nowrap; letter-spacing: 0.5px; }
+  .tab-btn:hover { color: #fff; }
   .tab-btn.active { color: var(--accent); border-bottom: 3px solid var(--accent); }
+  
   .page { display: none; }
   .page.active { display: block; }
 
-  .manual-form { background: #0a0a0a; padding: 20px; border-radius: 4px; display: grid; grid-template-columns: 1.5fr repeat(6, 1fr) 1.2fr; gap: 10px; margin-bottom: 40px; border: 1px solid var(--border); align-items: end; }
-  .input-group { display: flex; flex-direction: column; gap: 6px; }
-  .input-group label { font-size: 9px; color: var(--muted); text-transform: uppercase; }
-  input { background: #000; border: 1px solid #222; color: #fff; padding: 12px; font-family: var(--font-mono); outline: none; border-radius: 4px; font-size: 14px; width: 100%; box-sizing: border-box; }
-  .btn-add { background: var(--accent); color: #000; border: none; padding: 10px; cursor: pointer; font-weight: bold; border-radius: 4px; height: 45px; font-size: 14px; transition: 0.2s; }
+  /* Layout grids */
+  .layout-grid-ai { display: grid; grid-template-columns: 1fr 2fr; gap: 25px; }
+  @media (max-width: 1024px) {
+    .layout-grid-ai { grid-template-columns: 1fr; }
+  }
 
-  .stock-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); gap: 25px; }
-  .stock-card { background: var(--surface); padding: 25px; border-radius: 8px; border: 1px solid var(--border); position: relative; }
-  .ticker { font-family: var(--font-display); font-size: 42px; color: var(--accent); line-height: 1; }
-  .price { font-family: var(--font-display); font-size: 60px; color: var(--up); line-height: 1; margin: 10px 0; }
-  .chart-img { width: 100%; border-radius: 4px; margin-bottom: 20px; border: 1px solid #222; }
+  /* Control Panel & Content Cards */
+  .control-card { background: var(--surface); padding: 25px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 20px; }
+  .card-title { font-family: var(--font-display); font-size: 24px; color: var(--accent); margin-top: 0; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
   
+  /* Form Inputs & Controls */
+  .input-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 15px; }
+  .input-group label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  input, select, textarea { background: #000; border: 1px solid #222; color: #fff; padding: 12px; font-family: var(--font-mono); outline: none; border-radius: 4px; font-size: 14px; width: 100%; box-sizing: border-box; }
+  input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+  
+  /* Manual Form for Portfolio */
+  .manual-form { background: #0a0a0a; padding: 20px; border-radius: 6px; display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr; gap: 15px; margin-bottom: 30px; border: 1px solid var(--border); align-items: end; }
+  @media (max-width: 768px) {
+    .manual-form { grid-template-columns: 1fr; gap: 12px; }
+  }
+
+  /* Manual Plan Form for Watchlist */
+  .manual-plan-form { background: #0a0a0a; padding: 20px; border-radius: 6px; display: grid; grid-template-columns: 1.2fr repeat(6, 1fr) 1fr; gap: 10px; margin-bottom: 30px; border: 1px solid var(--border); align-items: end; }
+  @media (max-width: 1100px) {
+    .manual-plan-form { grid-template-columns: 1fr 1fr; }
+  }
+
+  /* Portfolio Summary Cards */
+  .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 30px; }
+  .sum-card { background: var(--surface); padding: 20px; border-radius: 8px; border: 1px solid var(--border); display: flex; flex-direction: column; }
+  .sum-label { font-size: 11px; color: var(--muted); text-transform: uppercase; margin-bottom: 5px; }
+  .sum-value { font-family: var(--font-display); font-size: 38px; line-height: 1; }
+  .sum-sub { font-size: 13px; margin-top: 5px; }
+
+  /* Stock Technical Grid */
+  .stock-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); gap: 25px; }
+  @media (max-width: 480px) {
+    .stock-grid { grid-template-columns: 1fr; }
+  }
+  .stock-card { background: var(--surface); padding: 25px; border-radius: 8px; border: 1px solid var(--border); position: relative; }
+  .ticker-large { font-family: var(--font-display); font-size: 42px; color: var(--accent); line-height: 1; }
+  .price-large { font-family: var(--font-display); font-size: 55px; color: var(--up); line-height: 1; margin: 10px 0; }
+  .chart-img { width: 100%; border-radius: 4px; margin-bottom: 20px; border: 1px solid #222; }
+
+  /* Action / Technical Table Style */
   .action-table { width: 100%; border-collapse: collapse; font-size: 13px; }
   .action-table th { text-align: left; color: var(--muted); padding-bottom: 10px; font-size: 10px; text-transform: uppercase; }
   .action-table td { padding: 10px 5px; border-bottom: 1px solid rgba(255,255,255,0.03); }
-  
   .st-near { color: var(--cyan); font-weight: bold; }
   .st-break { color: var(--blue); font-weight: bold; }
-  .st-cut { color: var(--red); font-weight: bold; }
-  .card-alert-red { border: 2px solid var(--red) !important; }
-  .remove-btn { position: absolute; top: 15px; right: 15px; cursor: pointer; color: #444; border: none; background: none; font-size: 24px; }
-  
+  .st-cut { color: var(--down); font-weight: bold; }
+  .card-alert-red { border: 2px solid var(--down) !important; }
+  .remove-btn { position: absolute; top: 15px; right: 15px; cursor: pointer; color: #555; border: none; background: none; font-size: 24px; transition: 0.2s; }
+  .remove-btn:hover { color: var(--down); }
+
+  /* Buttons */
+  .btn-action { background: var(--accent); color: #000; border: none; padding: 12px; cursor: pointer; font-weight: bold; border-radius: 4px; font-size: 13px; transition: 0.2s; font-family: var(--font-mono); text-transform: uppercase; display: flex; justify-content: center; align-items: center; gap: 8px; width: 100%; }
+  .btn-action:hover { background: #dfb435; }
+  .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+  .btn-outline:hover { background: rgba(255,255,255,0.05); border-color: var(--accent); }
+  .btn-purple { background: var(--purple); color: #fff; }
+  .btn-purple:hover { background: #9333ea; }
+  .btn-add { background: var(--accent); color: #000; border: none; padding: 10px; cursor: pointer; font-weight: bold; border-radius: 4px; height: 45px; font-size: 14px; transition: 0.2s; font-family: var(--font-mono); text-transform: uppercase; }
+  .btn-add:hover { background: #dfb435; }
+
+  /* Portfolio Table Style */
+  .table-container { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 30px; }
+  .port-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
+  .port-table th { background: rgba(255,255,255,0.02); padding: 15px; font-size: 11px; color: var(--muted); text-transform: uppercase; border-bottom: 1px solid var(--border); }
+  .port-table td { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.03); vertical-align: middle; }
+  .port-table tr:hover { background: rgba(255,255,255,0.01); }
+  .p-ticker { font-family: var(--font-display); font-size: 24px; color: var(--accent); }
+  .text-up { color: var(--up); }
+  .text-down { color: var(--down); }
+  .text-muted { color: var(--muted); }
+  .btn-table-delete { background: none; border: none; color: #555; cursor: pointer; font-size: 16px; transition: 0.2s; padding: 5px 10px; }
+  .btn-table-delete:hover { color: var(--down); }
+
+  /* Scanner Feature layout */
   .scanner-box { background: var(--surface); padding: 40px; border-radius: 8px; border: 1px solid var(--border); max-width: 800px; margin: 0 auto; }
-  .btn-scanner-add { background: var(--accent); color: #000; border: none; padding: 12px 25px; font-weight: bold; border-radius: 4px; cursor: pointer; margin-top: 20px; width: 100%; font-family: var(--font-mono); }
+  .btn-scanner-add { background: var(--accent); color: #000; border: none; padding: 12px 25px; font-weight: bold; border-radius: 4px; cursor: pointer; margin-top: 20px; width: 100%; font-family: var(--font-mono); text-transform: uppercase; transition: 0.2s; }
+  .btn-scanner-add:hover { background: #dfb435; }
+
+  /* Output Area (AI Viewport) */
+  .output-box { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; min-height: 550px; display: flex; flex-direction: column; position: relative; }
+  .output-header { padding: 15px 25px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.01); }
+  .output-title { font-family: var(--font-display); font-size: 20px; color: var(--cyan); margin: 0; }
+  .output-content { padding: 25px; overflow-y: auto; flex-grow: 1; font-size: 14px; line-height: 1.6; color: #e2dfda; }
+  
+  /* Scrollbar Customization */
+  .output-content::-webkit-scrollbar, .table-container::-webkit-scrollbar { width: 6px; height: 6px; }
+  .output-content::-webkit-scrollbar-track, .table-container::-webkit-scrollbar-track { background: #000; }
+  .output-content::-webkit-scrollbar-thumb, .table-container::-webkit-scrollbar-thumb { background: #222; border-radius: 3px; }
+
+  /* Markdown Body Rendering Styles */
+  .markdown-body h1, .markdown-body h2, .markdown-body h3 { font-family: var(--font-display); color: var(--accent); letter-spacing: 0.5px; }
+  .markdown-body h1 { font-size: 28px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+  .markdown-body h2 { font-size: 22px; margin-top: 20px; }
+  .markdown-body h3 { font-size: 18px; color: var(--cyan); }
+  .markdown-body p { margin-bottom: 15px; }
+  .markdown-body ul, .markdown-body ol { padding-left: 20px; margin-bottom: 15px; }
+  .markdown-body li { margin-bottom: 5px; }
+  .markdown-body code { background: #000; padding: 2px 6px; border-radius: 4px; color: var(--cyan); font-family: var(--font-mono); font-size: 13px; }
+  .markdown-body strong { color: #fff; }
+  .markdown-body blockquote { border-left: 3px solid var(--accent); padding-left: 15px; color: var(--muted); margin: 15px 0; }
+  .markdown-body table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 13px; }
+  .markdown-body th { background: rgba(255,255,255,0.04); padding: 8px 12px; border: 1px solid var(--border); text-align: left; color: var(--accent); }
+  .markdown-body td { padding: 8px 12px; border: 1px solid var(--border); }
+  
+  /* Loading UI */
+  .loading-container { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; min-height: 300px; color: var(--muted); }
+  .spinner { width: 50px; height: 50px; border: 3px solid rgba(245, 200, 66, 0.1); border-radius: 50%; border-top-color: var(--accent); animation: spin 1s ease-in-out infinite; margin-bottom: 20px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .pulse-text { animation: pulse 1.5s infinite; font-size: 14px; }
+  @keyframes pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+
+  /* Grounding Sources Panel */
+  .sources-box { background: rgba(255, 255, 255, 0.02); border-top: 1px solid var(--border); padding: 15px 25px; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px; }
+  .sources-title { font-size: 10px; color: var(--muted); text-transform: uppercase; margin-bottom: 8px; font-weight: bold; letter-spacing: 1px; }
+  .sources-list { display: flex; flex-wrap: wrap; gap: 8px; padding: 0; margin: 0; list-style: none; }
+  .source-tag { background: #000; border: 1px solid var(--border); border-radius: 4px; padding: 4px 10px; font-size: 11px; color: var(--cyan); text-decoration: none; display: inline-flex; align-items: center; gap: 5px; transition: 0.2s; }
+  .source-tag:hover { border-color: var(--cyan); background: rgba(0, 255, 255, 0.05); }
+
+  /* Info Notification bar */
+  .info-banner { background: rgba(168, 85, 247, 0.1); border: 1px solid rgba(168, 85, 247, 0.2); padding: 12px 15px; border-radius: 6px; font-size: 12px; color: #d8b4fe; margin-bottom: 15px; line-height: 1.4; }
+  .no-data { padding: 40px; text-align: center; color: var(--muted); font-size: 14px; }
+
+  /* Custom Toast System */
+  .toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+  .toast { background: var(--surface); color: #fff; border-left: 4px solid var(--accent); padding: 15px 20px; border-radius: 4px; font-size: 14px; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); pointer-events: auto; animation: slideIn 0.3s ease-out forwards; max-width: 350px; }
+  .toast.success { border-left-color: var(--up); }
+  .toast.error { border-left-color: var(--down); }
+  .toast.info { border-left-color: var(--cyan); }
+  @keyframes slideIn { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 </style>
 </head>
 <body>
 
+<!-- สำหรับรับแจ้งเตือนของระบบแบบไร้การใช้ Alert -->
+<div id="toast-wrapper" class="toast-container"></div>
+
 <div class="wrapper">
-  <div class="nav-tabs">
-    <button class="tab-btn active" id="tab-portfolio" onclick="switchPage('portfolio')">MAIN PORTFOLIO</button>
-    <button class="tab-btn" id="tab-scanner" onclick="switchPage('scanner')">FIBO SCANNER</button>
+  
+  <!-- ส่วนหัวรวมแสดงชื่อโปรเจกต์ -->
+  <div class="header-section">
+    <div>
+      <h1 class="title-display">US MARKET PRO - INTEGRATED SUITE</h1>
+      <div style="font-size: 12px; color: var(--muted); margin-top: 5px;">ระบบรวมแดชบอร์ดจดพอร์ตจริง ค้นหาแผนระดับ Fibonacci และผู้ช่วยวิเคราะห์ AI ในหนึ่งเดียว</div>
+    </div>
   </div>
 
+  <!-- แถบเมนูด้านบน (Main Navigation Tabs) -->
+  <div class="nav-tabs">
+    <button class="tab-btn active" id="tab-portfolio" onclick="switchPage('portfolio')">💼 My Portfolio (Holdings)</button>
+    <button class="tab-btn" id="tab-watchlist" onclick="switchPage('watchlist')">📉 Fibo Watchlist</button>
+    <button class="tab-btn" id="tab-fibo-scanner" onclick="switchPage('fibo-scanner')">🔍 Fibo Scanner</button>
+    <button class="tab-btn" id="tab-ai-analyst" onclick="switchPage('ai-analyst')">🤖 AI Financial Analyst</button>
+  </div>
+
+  <!-- หน้าที่ 1: แดชบอร์ดติดตามพอร์ตหุ้นจริง (Portfolio Holdings) -->
   <div id="portfolio" class="page active">
-    <div class="manual-form">
-      <div class="input-group"><label>Ticker</label><input type="text" id="t-m" placeholder="NVDA"></div>
-      <div class="input-group"><label>ขาย 3</label><input type="number" id="r3-m" step="0.01"></div>
-      <div class="input-group"><label>ขาย 2</label><input type="number" id="r2-m" step="0.01"></div>
-      <div class="input-group"><label>ขาย 1</label><input type="number" id="r1-m" step="0.01"></div>
-      <div class="input-group"><label>ซื้อ 1</label><input type="number" id="s1-m" step="0.01"></div>
-      <div class="input-group"><label>ซื้อ 2</label><input type="number" id="s2-m" step="0.01"></div>
-      <div class="input-group"><label>คัท (S3)</label><input type="number" id="s3-m" step="0.01"></div>
-      <button class="btn-add" onclick="addManual()">+ เพิ่มหุ้น</button>
+    <!-- การ์ดสรุปภาพรวมพอร์ต (Total Summary) -->
+    <div class="summary-grid">
+      <div class="sum-card">
+        <span class="sum-label">พอร์ตรวมปัจจุบัน (Total Value)</span>
+        <span class="sum-value" id="total-value">$0.00</span>
+        <span class="sum-sub text-muted" id="total-cost-sub">ต้นทุน: $0.00</span>
+      </div>
+      <div class="sum-card">
+        <span class="sum-label">กำไร/ขาดทุนรวม (Total P&L)</span>
+        <span class="sum-value" id="total-pnl">$0.00</span>
+        <span class="sum-sub" id="total-pnl-pct">0.00%</span>
+      </div>
+      <div class="sum-card">
+        <span class="sum-label">จำนวนหุ้นที่ถือครอง (Assets)</span>
+        <span class="sum-value" id="total-assets">0 ตัว</span>
+        <span class="sum-sub text-muted">อัปเดตราคาแบบอัตโนมัติ</span>
+      </div>
     </div>
+
+    <!-- ฟอร์มเพิ่มหุ้นลงพอร์ตจริง -->
+    <div class="manual-form">
+      <div class="input-group">
+        <label>ชื่อหุ้น (Ticker)</label>
+        <input type="text" id="my-ticker" placeholder="เช่น AAPL, NVDA" style="text-transform: uppercase;">
+      </div>
+      <div class="input-group">
+        <label>ราคาเฉลี่ยที่ซื้อ (Avg Cost / Share)</label>
+        <input type="number" id="my-cost" step="0.01" placeholder="0.00">
+      </div>
+      <div class="input-group">
+        <label>จำนวนหน่วยหุ้น (Shares / Quantity)</label>
+        <input type="number" id="my-shares" step="0.0001" placeholder="0">
+      </div>
+      <button class="btn-add" onclick="addHolding()">+ บันทึกพอร์ต</button>
+    </div>
+
+    <!-- ตารางพอร์ตโฟลิโอ -->
+    <div class="table-container">
+      <table class="port-table">
+        <thead>
+          <tr>
+            <th>ชื่อหุ้น</th>
+            <th style="text-align: right;">จำนวนหุ้น (Qty)</th>
+            <th style="text-align: right;">ราคาเฉลี่ย (Avg Cost)</th>
+            <th style="text-align: right;">ราคาสด (Live Price)</th>
+            <th style="text-align: right;">มูลค่าตลาด (Market Value)</th>
+            <th style="text-align: right;">กำไร / ขาดทุน (P&L)</th>
+            <th style="text-align: center;">จัดการ</th>
+          </tr>
+        </thead>
+        <tbody id="port-tbody">
+          <!-- ข้อมูลพอร์ตจะโหลดมาแสดงผลตรงนี้ -->
+        </tbody>
+      </table>
+      <div id="empty-state" class="no-data" style="display: none;">
+        ไม่มีข้อมูลหุ้นในพอร์ตโฟลิโอขณะนี้ กรุณากรอกแบบฟอร์มด้านบนเพื่อเพิ่มรายการหุ้นของคุณซื้อจริง
+      </div>
+    </div>
+  </div>
+
+  <!-- หน้าที่ 2: วางแผนเทรด / ติดตามราคา Fibo Watchlist -->
+  <div id="watchlist" class="page">
+    <!-- ฟอร์มแมนวลสำหรับบันทึกเป้าหมาย Fibonacci เอง -->
+    <div class="manual-plan-form">
+      <div class="input-group"><label>Ticker</label><input type="text" id="t-m" placeholder="เช่น NVDA" style="text-transform: uppercase;"></div>
+      <div class="input-group"><label>ขาย 3 (R3)</label><input type="number" id="r3-m" step="0.01"></div>
+      <div class="input-group"><label>ขาย 2 (R2)</label><input type="number" id="r2-m" step="0.01"></div>
+      <div class="input-group"><label>ขาย 1 (R1)</label><input type="number" id="r1-m" step="0.01"></div>
+      <div class="input-group"><label>ซื้อ 1 (S1)</label><input type="number" id="s1-m" step="0.01"></div>
+      <div class="input-group"><label>ซื้อ 2 (S2)</label><input type="number" id="s2-m" step="0.01"></div>
+      <div class="input-group"><label>คัท (S3)</label><input type="number" id="s3-m" step="0.01"></div>
+      <button class="btn-add" onclick="addManualWatchlist()">+ เพิ่มหุ้น</button>
+    </div>
+    
+    <!-- บอร์ดแสดงการ์ด Technical แต่ละตัวที่บันทึกเป้าหมายไว้ -->
     <div id="portfolio-grid" class="stock-grid"></div>
   </div>
 
-  <div id="scanner" class="page">
+  <!-- หน้าที่ 3: ระบบสแกนหาเป้าหมายด้วย Auto-Fibo (Fibo Scanner) -->
+  <div id="fibo-scanner" class="page">
     <div class="scanner-box">
-      <h2 style="font-family: var(--font-display); font-size: 36px;">FIBO SCANNER</h2>
-      <div class="input-group" style="margin-top: 20px;">
-        <label>วิเคราะห์ Auto-Fibo</label>
+      <h2 style="font-family: var(--font-display); font-size: 36px; margin-top:0;">FIBO SCANNER</h2>
+      <p style="font-size:13px; color: var(--muted); margin-bottom: 20px;">สแกนหาเป้าหมายทางเทคนิคโดยคำนวณจากระดับราคาสูงสุด-ต่ำสุดในรอบ 52 สัปดาห์อัตโนมัติ</p>
+      
+      <div class="input-group">
+        <label>ระบุชื่อหุ้นที่ต้องการประเมิน Auto-Fibo</label>
         <div style="display:flex; gap:10px;">
-            <input type="text" id="t-scan" placeholder="Ticker" onkeypress="if(event.key==='Enter') scanFibo()">
+            <input type="text" id="t-scan" placeholder="เช่น TSLA, NVDA, AAPL" style="text-transform: uppercase;" onkeypress="if(event.key==='Enter') scanFibo()">
             <button class="btn-add" style="width:120px;" onclick="scanFibo()">SCAN</button>
         </div>
       </div>
+      
       <div id="scan-result" style="display:none; margin-top:30px;">
-        <div style="display:flex; justify-content:space-between; align-items:flex-end;">
-            <div><div class="ticker" id="res-ticker">---</div><div class="price" id="res-price">$0.00</div></div>
-            <button class="btn-scanner-add" onclick="transferToPortfolio()">+ ADD TO PORTFOLIO</button>
+        <div style="display:flex; justify-content:space-between; align-items:flex-end; flex-wrap: wrap; gap:10px;">
+            <div>
+              <div class="ticker-large" id="res-ticker">---</div>
+              <div class="price-large" id="res-price">$0.00</div>
+            </div>
+            <button class="btn-scanner-add" onclick="transferToPortfolio()">+ ADD TO FIBO WATCHLIST</button>
         </div>
-        <img id="res-chart" class="chart-img" style="margin-top:15px;" src="">
+        <img id="res-chart" class="chart-img" style="margin-top:15px;" src="" alt="Stock Chart">
         <table class="action-table">
-            <thead><tr><th>แผนเทรด (Fibo Level)</th><th>เป้าหมาย</th><th>ระยะ %</th></tr></thead>
+            <thead><tr><th>แผนเทรด (Fibo Level)</th><th>เป้าหมายราคาสูตร</th><th>ระยะห่าง % จากราคาปัจจุบัน</th></tr></thead>
             <tbody id="scan-tbody"></tbody>
         </table>
       </div>
     </div>
   </div>
+
+  <!-- หน้าที่ 4: นักวิเคราะห์การเงินอัจฉริยะ (AI Financial Analyst) -->
+  <div id="ai-analyst" class="page">
+    <div class="layout-grid-ai">
+      <!-- คอนโทรลพาเนลด้านซ้ายสำหรับ AI -->
+      <div class="sidebar">
+        
+        <!-- เมนู 1: วิเคราะห์รายตัวด่วน -->
+        <div class="control-card">
+          <h3 class="card-title">🔍 Quick Ticker Scan</h3>
+          <div class="input-group">
+            <label>ระบุชื่อหุ้นสหรัฐฯ (Ticker)</label>
+            <input type="text" id="ai-ticker" placeholder="เช่น NVDA, TSLA, MSFT" style="text-transform: uppercase;">
+          </div>
+          
+          <div class="analysis-options">
+            <button class="btn-action" onclick="runAnalysis('news')">
+              📰 ข่าวล่าสุด & แนวโน้มกระแส (Sentiment)
+            </button>
+            <button class="btn-action btn-outline" onclick="runAnalysis('fundamental')" style="margin-top: 8px;">
+              📊 ปัจจัยพื้นฐาน & มูลค่าหุ้น (Valuation)
+            </button>
+            <button class="btn-action btn-outline" onclick="runAnalysis('technical')" style="margin-top: 8px;">
+              📈 แนวรับ-ต้าน & แผนเทคนิคัล (Fibo)
+            </button>
+          </div>
+        </div>
+
+        <!-- เมนู 2: ตรวจพอร์ตการลงทุนจริงด้วย AI -->
+        <div class="control-card" style="border-color: var(--purple);">
+          <h3 class="card-title" style="color: var(--purple);">💼 Portfolio Health Audit</h3>
+          <div class="info-banner">
+            ฟังก์ชันนี้จะส่งข้อมูลและรายการหุ้นที่คุณซื้อจริงที่บันทึกไว้ในหน้า <strong>MY PORTFOLIO</strong> ไปให้ AI ประเมินการกระจายความเสี่ยงให้โดยอัตโนมัติ
+          </div>
+          <button class="btn-action btn-purple" onclick="auditMyPortfolio()">
+            ✨ ตรวจสอบสุขภาพพอร์ตรวมจริง
+          </button>
+        </div>
+
+        <!-- เมนู 3: แชทกับ AI อิสระ -->
+        <div class="control-card">
+          <h3 class="card-title">💬 Ask AI Anything</h3>
+          <div class="input-group">
+            <label>พิมพ์ข้อซักถามที่คุณต้องการ</label>
+            <textarea id="ai-custom-prompt" rows="3" placeholder="ตัวอย่าง: แนะนำหลักการคัดกรองหุ้นเติบโตแนว Growth Stock หรือ อธิบายข้อแตกต่างของการเทรดสไตล์ Swing Trade กับ Day Trade"></textarea>
+          </div>
+          <button class="btn-action" style="background: var(--cyan); color: #000;" onclick="sendCustomQuery()">
+            🚀 ส่งคำถามไปยัง AI
+          </button>
+        </div>
+
+      </div>
+
+      <!-- หน้าต่างแสดงรายงาน AI ด้านขวา -->
+      <div class="main-display">
+        <div class="output-box">
+          <div class="output-header">
+            <h2 class="output-title" id="display-title">ANALYSIS VIEWPORT</h2>
+            <div id="status-indicator" style="font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px;">
+              <span style="width:8px; height:8px; background:#444; border-radius:50%; display:inline-block;" id="status-dot"></span>
+              <span id="status-text">Standby</span>
+            </div>
+          </div>
+          
+          <!-- ส่วนที่แสดงผล Markdown -->
+          <div class="output-content markdown-body" id="display-content">
+            <div style="text-align: center; padding-top: 100px; color: var(--muted);">
+              <div style="font-size: 48px; margin-bottom: 20px;">🤖</div>
+              <h3>ระบบผู้ช่วยวิเคราะห์การลงทุน AI พร้อมให้บริการ</h3>
+              <p style="max-width: 500px; margin: 0 auto; font-size: 13px;">
+                กรุณาเลือกฟังก์ชันวิเคราะห์พอร์ตจริงของคุณ หรือสแกนหุ้นทางซ้ายมือ <br>
+                ระบบผสานเชื่อมโมเดลระบบสืบค้นเรียลไทม์ผ่าน Google Search อย่างแม่นยำ
+              </p>
+            </div>
+          </div>
+
+          <!-- แหล่งอ้างอิงข้อมูล Grounding -->
+          <div class="sources-box" id="sources-area" style="display: none;">
+            <div class="sources-title">🔗 แหล่งอ้างอิงข้อมูลสืบค้นจริง (Google Grounding Sources)</div>
+            <ul class="sources-list" id="sources-container">
+              <!-- ลิงก์ระบบจะถูกวาดที่นี่ -->
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <script>
-const API_KEY = 'd82b00hr01qmgc0fd10gd82b00hr01qmgc0fd110';
-let tickers = JSON.parse(localStorage.getItem('pct_list')) || [];
-let cache = JSON.parse(localStorage.getItem('pct_data')) || {};
-let currentScanData = null;
+// API Keys สำหรับเรียกข้อมูลและเปิดใช้ AI
+const FINNHUB_KEY = 'd82b00hr01qmgc0fd10gd82b00hr01qmgc0fd110';
+const apiKey = ""; // ปล่อยว่างไว้เพื่อใช้ Key อัตโนมัติจากสิ่งแวดล้อมรันไทม์
+const MODEL_NAME = "gemini-2.5-flash-preview-09-2025";
 
-function save() {
-  localStorage.setItem('pct_list', JSON.stringify(tickers));
-  localStorage.setItem('pct_data', JSON.stringify(cache));
+// --- ฟังก์ชัน Custom Notification Toast เพื่อไม่ใช้งาน Browser Alert() ---
+function showToast(message, type = 'error') {
+  const container = document.getElementById('toast-wrapper');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.innerText = message;
+  container.appendChild(toast);
+  
+  setTimeout(() => {
+    toast.style.animation = 'slideIn 0.3s ease-out reverse';
+    setTimeout(() => {
+      toast.remove();
+    }, 300);
+  }, 4000);
 }
 
-function switchPage(pId) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById(pId).classList.add('active');
-  document.getElementById('tab-' + pId).classList.add('active');
+// --- ส่วนที่ 1: การจัดการพอร์ตจริง (Portfolio Holdings) ใน LocalStorage ---
+let myHoldings = JSON.parse(localStorage.getItem('my_holdings_list')) || {};
+
+function saveHoldings() {
+  localStorage.setItem('my_holdings_list', JSON.stringify(myHoldings));
+}
+
+async function fetchHoldingPrice(ticker) {
+  try {
+    const res = await fetch(`https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${FINNHUB_KEY}`);
+    const data = await res.json();
+    if(data.c) {
+      if (myHoldings[ticker]) {
+        myHoldings[ticker].currentPrice = data.c;
+        saveHoldings();
+        renderHoldingsTable();
+      }
+    }
+  } catch(e) { 
+    console.error("เกิดข้อผิดพลาดในการดึงราคาของ " + ticker, e); 
+  }
+}
+
+function updateAllHoldingPrices() {
+  Object.keys(myHoldings).forEach(ticker => {
+    fetchHoldingPrice(ticker);
+  });
+}
+
+function addHolding() {
+  const ticker = document.getElementById('my-ticker').value.toUpperCase().trim();
+  const cost = parseFloat(document.getElementById('my-cost').value);
+  const shares = parseFloat(document.getElementById('my-shares').value);
+
+  if (!ticker) {
+    showToast("กรุณากรอกชื่อหุ้น", "error");
+    return;
+  }
+  if (isNaN(cost) || cost <= 0) {
+    showToast("กรุณากรอกราคาต้นทุนให้ถูกต้อง", "error");
+    return;
+  }
+  if (isNaN(shares) || shares <= 0) {
+    showToast("กรุณากรอกจำนวนหุ้นให้ถูกต้อง", "error");
+    return;
+  }
+
+  myHoldings[ticker] = {
+    avgCost: cost,
+    shares: shares,
+    currentPrice: myHoldings[ticker]?.currentPrice || cost
+  };
+
+  saveHoldings();
+  fetchHoldingPrice(ticker);
+  
+  document.getElementById('my-ticker').value = '';
+  document.getElementById('my-cost').value = '';
+  document.getElementById('my-shares').value = '';
+  showToast(`บันทึกหุ้น ${ticker} ลงพอร์ตสำเร็จ`, "success");
+}
+
+function removeHolding(ticker) {
+  // สร้าง Dialog ยืนยันสไตล์โมเดิร์น
+  if (confirm(`คุณต้องการลบหุ้น ${ticker} ออกจากพอร์ตรวมจริงใช่หรือไม่?`)) {
+    delete myHoldings[ticker];
+    saveHoldings();
+    renderHoldingsTable();
+    showToast(`ลบหุ้น ${ticker} ออกจากรายการแล้ว`, "info");
+  }
+}
+
+function renderHoldingsTable() {
+  const tbody = document.getElementById('port-tbody');
+  const emptyState = document.getElementById('empty-state');
+  const tickers = Object.keys(myHoldings);
+
+  if (tickers.length === 0) {
+    tbody.innerHTML = '';
+    emptyState.style.display = 'block';
+    document.getElementById('total-value').innerText = '$0.00';
+    document.getElementById('total-cost-sub').innerText = 'ต้นทุน: $0.00';
+    document.getElementById('total-pnl').innerText = '$0.00';
+    document.getElementById('total-pnl-pct').innerText = '0.00%';
+    document.getElementById('total-pnl').className = 'sum-value';
+    document.getElementById('total-pnl-pct').className = 'sum-sub text-muted';
+    document.getElementById('total-assets').innerText = '0 ตัว';
+    return;
+  }
+
+  emptyState.style.display = 'none';
+  
+  let totalCost = 0;
+  let totalValue = 0;
+  let rowsHtml = '';
+
+  tickers.forEach(ticker => {
+    const item = myHoldings[ticker];
+    const qty = item.shares;
+    const avgCost = item.avgCost;
+    const currentPrice = item.currentPrice || avgCost;
+
+    const costValue = qty * avgCost;
+    const marketValue = qty * currentPrice;
+    const pnlVal = marketValue - costValue;
+    const pnlPct = costValue > 0 ? (pnlVal / costValue) * 100 : 0;
+
+    totalCost += costValue;
+    totalValue += marketValue;
+
+    const pnlClass = pnlVal >= 0 ? 'text-up' : 'text-down';
+    const pnlSign = pnlVal >= 0 ? '+' : '';
+
+    rowsHtml += `
+      <tr>
+        <td>
+          <div class="p-ticker">${ticker}</div>
+        </td>
+        <td style="text-align: right; font-weight: 500;">${qty.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 4})}</td>
+        <td style="text-align: right;">$${avgCost.toFixed(2)}</td>
+        <td style="text-align: right; font-weight: bold;">$${currentPrice.toFixed(2)}</td>
+        <td style="text-align: right; font-weight: bold;">$${marketValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+        <td style="text-align: right; font-weight: bold;" class="${pnlClass}">
+          <div>${pnlSign}$${pnlVal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+          <div style="font-size: 11px;">${pnlSign}${pnlPct.toFixed(2)}%</div>
+        </td>
+        <td style="text-align: center;">
+          <button class="btn-table-delete" onclick="removeHolding('${ticker}')" title="ลบรายการ">✕</button>
+        </td>
+      </tr>
+    `;
+  });
+
+  tbody.innerHTML = rowsHtml;
+
+  const totalPnlVal = totalValue - totalCost;
+  const totalPnlPctVal = totalCost > 0 ? (totalPnlVal / totalCost) * 100 : 0;
+  const totalPnlClass = totalPnlVal >= 0 ? 'text-up' : 'text-down';
+  const totalPnlSign = totalPnlVal >= 0 ? '+' : '';
+
+  document.getElementById('total-value').innerText = '$' + totalValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  document.getElementById('total-cost-sub').innerText = 'ต้นทุนรวม: $' + totalCost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  
+  const pnlEl = document.getElementById('total-pnl');
+  pnlEl.innerText = totalPnlSign + '$' + totalPnlVal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  pnlEl.className = 'sum-value ' + totalPnlClass;
+
+  const pnlPctEl = document.getElementById('total-pnl-pct');
+  pnlPctEl.innerText = totalPnlSign + totalPnlPctVal.toFixed(2) + '%';
+  pnlPctEl.className = 'sum-sub ' + totalPnlClass;
+
+  document.getElementById('total-assets').innerText = tickers.length + ' ตัว';
+}
+
+
+// --- ส่วนที่ 2: ระบบแผนเทรด & เทคนิคัลคาร์ด Fibo Watchlist ใน LocalStorage ---
+let watchlistTickers = JSON.parse(localStorage.getItem('pct_list')) || [];
+let watchlistCache = JSON.parse(localStorage.getItem('pct_data')) || {};
+
+function saveWatchlist() {
+  localStorage.setItem('pct_list', JSON.stringify(watchlistTickers));
+  localStorage.setItem('pct_data', JSON.stringify(watchlistCache));
 }
 
 function getPctInfo(current, target, type) {
@@ -127,22 +592,24 @@ function getPctInfo(current, target, type) {
   return { dist: (diffPct > 0 ? '+' : '') + diffPct.toFixed(2) + '%', status };
 }
 
-async function fetchPrice(t) {
+async function fetchWatchlistPrice(t) {
   try {
-    const res = await fetch(`https://finnhub.io/api/v1/quote?symbol=${t}&token=${API_KEY}`);
+    const res = await fetch(`https://finnhub.io/api/v1/quote?symbol=${t}&token=${FINNHUB_KEY}`);
     const d = await res.json();
     if(d.c) {
-      cache[t].price = d.c;
-      save(); // บันทึกราคาลง LocalStorage ทุกครั้งที่ดึงข้อมูลสำเร็จ
-      renderPortfolio();
+      if(watchlistCache[t]) {
+        watchlistCache[t].price = d.c;
+        saveWatchlist();
+        renderWatchlist();
+      }
     }
   } catch(e) { console.error(e); }
 }
 
-function renderPortfolio() {
+function renderWatchlist() {
   const grid = document.getElementById('portfolio-grid');
-  grid.innerHTML = tickers.map(t => {
-    const d = cache[t];
+  grid.innerHTML = watchlistTickers.map(t => {
+    const d = watchlistCache[t];
     const p = d.price || 0;
     const cutInfo = getPctInfo(p, d.s3, 'CUT');
     const levels = [
@@ -150,76 +617,335 @@ function renderPortfolio() {
         { n: 'ซื้อ 1 (S1)', v: d.s1, ty: 'S' }, { n: 'ซื้อ 2 (S2)', v: d.s2, ty: 'S' }, { n: 'คัท (S3)', v: d.s3, ty: 'CUT' }
     ];
     return `<div class="stock-card ${cutInfo.status === 'st-cut' ? 'card-alert-red' : ''}">
-      <button class="remove-btn" onclick="remove('${t}')">×</button>
-      <div class="ticker">${t}</div><div class="price">$${p.toFixed(2)}</div>
-      <img class="chart-img" src="https://charts2.finviz.com/chart.ashx?t=${t}&ty=c&ta=1&p=d&s=l">
+      <button class="remove-btn" onclick="removeWatchlist('${t}')">×</button>
+      <div class="ticker-large">${t}</div><div class="price-large">$${p.toFixed(2)}</div>
+      <img class="chart-img" src="https://charts2.finviz.com/chart.ashx?t=${t}&ty=c&ta=1&p=d&s=l" alt="chart" onerror="this.src='https://placehold.co/400x200/111/fff?text=No+Chart+Available'">
       <table class="action-table">
         <thead><tr><th>แผนเทรด</th><th>เป้าหมาย</th><th>ระยะ %</th></tr></thead>
         <tbody>${levels.map(l => {
           const info = getPctInfo(p, l.v, l.ty);
-          return `<tr><td>${l.n}</td><td>${l.v ? '$'+l.v : '—'}</td><td class="${info.status}">${info.dist}</td></tr>`;
+          return `<tr><td>${l.n}</td><td>${l.v ? '$'+parseFloat(l.v).toFixed(2) : '—'}</td><td class="${info.status}">${info.dist}</td></tr>`;
         }).join('')}</tbody>
       </table>
     </div>`;
   }).join('');
 }
 
-function addManual() {
+function addManualWatchlist() {
   const t = document.getElementById('t-m').value.toUpperCase().trim();
-  if(!t) return;
+  if(!t) {
+    showToast("กรุณากรอกชื่อย่อหุ้น (Ticker)", "error");
+    return;
+  }
   const data = {
     r3: document.getElementById('r3-m').value, r2: document.getElementById('r2-m').value, r1: document.getElementById('r1-m').value,
     s1: document.getElementById('s1-m').value, s2: document.getElementById('s2-m').value, s3: document.getElementById('s3-m').value,
     price: 0
   };
-  if(!tickers.includes(t)) tickers.unshift(t);
-  cache[t] = data;
-  save(); fetchPrice(t);
-  document.querySelectorAll('.manual-form input').forEach(i => i.value = '');
+  if(!watchlistTickers.includes(t)) watchlistTickers.unshift(t);
+  watchlistCache[t] = data;
+  saveWatchlist(); 
+  fetchWatchlistPrice(t);
+  
+  // ล้างค่าฟอร์ม
+  document.getElementById('t-m').value = '';
+  document.getElementById('r3-m').value = '';
+  document.getElementById('r2-m').value = '';
+  document.getElementById('r1-m').value = '';
+  document.getElementById('s1-m').value = '';
+  document.getElementById('s2-m').value = '';
+  document.getElementById('s3-m').value = '';
+  showToast(`เพิ่มแผนเทรดของ ${t} ลงใน Fibo Watchlist สำเร็จ`, "success");
 }
 
-function remove(t) {
-  if(confirm('ลบ ' + t + '?')) {
-    tickers = tickers.filter(x => x !== t); delete cache[t];
-    save(); renderPortfolio();
+function removeWatchlist(t) {
+  if(confirm('คุณต้องการลบหุ้น ' + t + ' ออกจากแผน Fibo Watchlist หรือไม่?')) {
+    watchlistTickers = watchlistTickers.filter(x => x !== t); 
+    delete watchlistCache[t];
+    saveWatchlist(); 
+    renderWatchlist();
+    showToast(`ลบหุ้น ${t} จาก Watchlist สำเร็จ`, "info");
   }
 }
 
+
+// --- ส่วนที่ 3: ระบบวิเคราะห์หาค่า Fibonacci อัตโนมัติ (Fibo Scanner) ---
+let currentScanData = null;
+
 async function scanFibo() {
   const t = document.getElementById('t-scan').value.toUpperCase().trim();
-  if(!t) return;
+  if(!t) {
+    showToast("กรุณากรอกชื่อหุ้นที่ต้องการสแกน", "error");
+    return;
+  }
+  
+  document.getElementById('scan-result').style.display = 'none';
+  
   try {
-    const res = await fetch(`https://finnhub.io/api/v1/stock/metric?symbol=${t}&metric=all&token=${API_KEY}`);
+    const res = await fetch(`https://finnhub.io/api/v1/stock/metric?symbol=${t}&metric=all&token=${FINNHUB_KEY}`);
     const data = await res.json();
-    const qRes = await fetch(`https://finnhub.io/api/v1/quote?symbol=${t}&token=${API_KEY}`);
+    const qRes = await fetch(`https://finnhub.io/api/v1/quote?symbol=${t}&token=${FINNHUB_KEY}`);
     const qData = await qRes.json();
+    
     if(data.metric && qData.c) {
       const h = data.metric['52WeekHigh'], l = data.metric['52WeekLow'], p = qData.c, range = h - l;
-      currentScanData = { ticker: t, price: p, levels: { r3: (h + (range * 0.618)).toFixed(2), r2: (h + (range * 0.382)).toFixed(2), r1: (h + (range * 0.236)).toFixed(2), s1: (h - (range * 0.236)).toFixed(2), s2: (h - (range * 0.382)).toFixed(2), s3: (h - (range * 0.500)).toFixed(2) } };
+      
+      currentScanData = { 
+        ticker: t, 
+        price: p, 
+        levels: { 
+          r3: (h + (range * 0.618)).toFixed(2), 
+          r2: (h + (range * 0.382)).toFixed(2), 
+          r1: (h + (range * 0.236)).toFixed(2), 
+          s1: (h - (range * 0.236)).toFixed(2), 
+          s2: (h - (range * 0.382)).toFixed(2), 
+          s3: (h - (range * 0.500)).toFixed(2) 
+        } 
+      };
+      
       document.getElementById('res-ticker').innerText = t;
       document.getElementById('res-price').innerText = '$' + p.toFixed(2);
       document.getElementById('res-chart').src = `https://charts2.finviz.com/chart.ashx?t=${t}&ty=c&ta=1&p=d&s=l`;
       document.getElementById('scan-tbody').innerHTML = Object.entries(currentScanData.levels).map(([k,v]) => {
           const info = getPctInfo(p, v, k.startsWith('r') ? 'R' : (k==='s3'?'CUT':'S'));
-          return `<tr><td>${k.toUpperCase()}</td><td>$${v}</td><td class="${info.status}">${info.dist}</td></tr>`;
+          return `<tr><td>${k.toUpperCase() === 'S3' ? 'คัท / S3 (50.0%)' : k.toUpperCase()}</td><td>$${v}</td><td class="${info.status}">${info.dist}</td></tr>`;
       }).join('');
       document.getElementById('scan-result').style.display = 'block';
+      showToast(`สแกน Auto-Fibo ของ ${t} สำเร็จ`, "success");
+    } else {
+      showToast('ไม่พบข้อมูล Ticker ดังกล่าว กรุณาตรวจสอบและพิมพ์ใหม่อีกครั้ง', "error");
     }
-  } catch(e) { alert('Error'); }
+  } catch(e) { 
+    showToast('ระบบเซิร์ฟเวอร์ดึงข้อมูลล้มเหลว กรุณาลองใหม่อีกครั้ง', "error"); 
+  }
 }
 
 function transferToPortfolio() {
     if(!currentScanData) return;
     const t = currentScanData.ticker;
-    if(!tickers.includes(t)) tickers.unshift(t);
-    cache[t] = { ...currentScanData.levels, price: currentScanData.price };
-    save(); renderPortfolio(); switchPage('portfolio');
+    if(!watchlistTickers.includes(t)) watchlistTickers.unshift(t);
+    watchlistCache[t] = { ...currentScanData.levels, price: currentScanData.price };
+    saveWatchlist(); 
+    renderWatchlist(); 
+    switchPage('watchlist');
+    showToast(`ย้ายแผนของ ${t} ไปยังหน้า Fibo Watchlist เรียบร้อย`, "success");
 }
 
-setInterval(() => { tickers.forEach(t => fetchPrice(t)); }, 60000);
+
+// --- ส่วนที่ 4: ผู้ช่วยวิเคราะห์ความเสี่ยงและหุ้นด้วยพลังภาษา AI (Gemini 2.5) ---
+
+marked.setOptions({
+  gfm: true,
+  breaks: true,
+  headerIds: false
+});
+
+// ฟังก์ชัน Exponential Backoff ในการเรียก API Key ของ Gemini ป้องกันส่งล้มเหลว
+async function callGeminiWithRetry(prompt, useSearch = true) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${apiKey}`;
+  
+  const payload = {
+    contents: [{ parts: [{ text: prompt }] }],
+    systemInstruction: {
+      parts: [{ text: "คุณคือนักวิเคราะห์การเงินและที่ปรึกษาพอร์ตการลงทุนหุ้นสหรัฐฯ มืออาชีพ (Professional US Stock Market Strategist & Portfolio Auditor) ให้ข้อมูลวิเคราะห์ที่เจาะลึก มีหลักการอ้างอิง ชัดเจน เข้าใจง่าย และให้คำแนะนำที่สามารถนำไปปรับใช้จริงได้ ให้เขียนคำตอบเป็นภาษาไทย โดยจัดรูปแบบข้อความด้วย Markdown ที่สวยงาม เช่น ใช้ข้อความหัวข้อ (Header), ตัวหนาเพื่อเน้นประเด็นสำคัญ, รายการสัญลักษณ์ (Bullet Points) และตารางเพื่อเปรียบเทียบข้อมูลตัวเลข" }]
+    }
+  };
+
+  if (useSearch) {
+    payload.tools = [{ "google_search": {} }];
+  }
+
+  let delay = 1000;
+  for (let attempt = 0; attempt < 5; attempt++) {
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Server returned status: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      
+      const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+      const groundings = result.candidates?.[0]?.groundingMetadata?.groundingAttributions?.map(a => ({
+        uri: a.web?.uri,
+        title: a.web?.title
+      })) || [];
+      
+      return { text, groundings };
+    } catch (error) {
+      if (attempt === 4) {
+        throw error;
+      }
+      await new Promise(resolve => setTimeout(resolve, delay));
+      delay *= 2;
+    }
+  }
+}
+
+function setDisplayLoading(message) {
+  document.getElementById('status-dot').style.background = 'var(--accent)';
+  document.getElementById('status-text').innerText = 'Processing';
+  document.getElementById('sources-area').style.display = 'none';
+  document.getElementById('display-content').innerHTML = `
+    <div class="loading-container">
+      <div class="spinner"></div>
+      <p class="pulse-text" style="color: var(--accent); font-weight: bold;">${message}</p>
+      <p style="font-size: 11px; color: var(--muted); margin-top: 5px;">ระบบ AI กำลังเชื่อมค้นและตรวจสอบข่าวเรียลไทม์ผ่าน Google Search...</p>
+    </div>
+  `;
+}
+
+function setDisplaySuccess(title, htmlContent, groundings = []) {
+  document.getElementById('status-dot').style.background = 'var(--up)';
+  document.getElementById('status-text').innerText = 'Success';
+  document.getElementById('display-title').innerText = title;
+  document.getElementById('display-content').innerHTML = htmlContent;
+
+  const sourcesArea = document.getElementById('sources-area');
+  const sourcesContainer = document.getElementById('sources-container');
+  
+  if (groundings.length > 0) {
+    sourcesContainer.innerHTML = groundings.map(src => {
+      const title = src.title || src.uri || "แหล่งข้อมูลสืบค้น";
+      return `<li><a href="${src.uri}" target="_blank" class="source-tag">🌐 ${title}</a></li>`;
+    }).join('');
+    sourcesArea.style.display = 'block';
+  } else {
+    sourcesArea.style.display = 'none';
+  }
+}
+
+function setDisplayError(error) {
+  document.getElementById('status-dot').style.background = 'var(--down)';
+  document.getElementById('status-text').innerText = 'Error';
+  document.getElementById('display-content').innerHTML = `
+    <div style="padding: 40px; text-align: center; color: var(--down);">
+      <div style="font-size: 48px; margin-bottom: 15px;">⚠️</div>
+      <h3>เกิดข้อผิดพลาดในการประมวลผล</h3>
+      <p style="font-size: 13px; max-width: 500px; margin: 10px auto;">
+        ${error.message || "ไม่สามารถเชื่อมต่อระบบวิเคราะห์ AI ได้ในขณะนี้ กรุณาลองใหม่อีกครั้งในภายหลัง"}
+      </p>
+      <button class="btn-action" style="max-width: 200px; margin: 20px auto 0 auto;" onclick="resetViewport()">รีเซ็ตหน้าจอ</button>
+    </div>
+  `;
+}
+
+function resetViewport() {
+  location.reload();
+}
+
+async function runAnalysis(type) {
+  const ticker = document.getElementById('ai-ticker').value.toUpperCase().trim();
+  if (!ticker) {
+    showToast("กรุณากรอกชื่อหุ้น (Ticker) ก่อนเริ่มต้นวิเคราะห์", "error");
+    return;
+  }
+
+  let prompt = "";
+  let typeTitle = "";
+  
+  if (type === 'news') {
+    typeTitle = `${ticker} - NEWS & SENTIMENT REPORT`;
+    setDisplayLoading(`กำลังสืบค้นข่าวสารและวิเคราะห์จิตวิทยาตลาดของหุ้น ${ticker}...`);
+    prompt = `กรุณาหาข้อมูลและสแกนข่าวสารล่าสุดในรอบสัปดาห์นี้เกี่ยวกับหุ้น ${ticker} (สหรัฐฯ) พร้อมวิเคราะห์จิตวิทยาตลาด (Market Sentiment) ผลกระทบจากข่าวดังกล่าว ปัจจัยหนุน/ตัวเร่ง (Catalysts) และความเสี่ยงหลักที่น่าจับตามองในระยะสั้นนี้`;
+  } else if (type === 'fundamental') {
+    typeTitle = `${ticker} - FUNDAMENTAL ANALYSIS`;
+    setDisplayLoading(`กำลังวิเคราะห์ปัจจัยพื้นฐานและประเมินมูลค่าหุ้น ${ticker}...`);
+    prompt = `กรุณาหาข้อมูลและทำการวิเคราะห์ปัจจัยพื้นฐาน (Fundamental Analysis) ของบริษัท/หุ้น ${ticker} (สหรัฐฯ) โดยระบุข้อมูลสรุปภาพรวมธุรกิจ, ผลประกอบการไตรมาสล่าสุดรวมถึงแนวโน้มรายได้, อัตราส่วนการเงินที่สำคัญเช่น P/E, PEG, Profit Margins, หนี้สิน, และประเมินความถูกแพงของมูลค่าหุ้น (Valuation) ว่าน่าสนใจสะสมในระดับราคาปัจจุบันหรือไม่`;
+  } else if (type === 'technical') {
+    typeTitle = `${ticker} - TECHNICAL ANALYSIS OUTLOOK`;
+    setDisplayLoading(`กำลังประเมินระดับแนวรับ-แนวต้านทางเทคนิคอลของหุ้น ${ticker}...`);
+    prompt = `กรุณาหาข้อมูลแนวโน้มทางเทคนิค (Technical Outlook) และโครงสร้างราคาสดล่าสุดของหุ้น ${ticker} (สหรัฐฯ) รวมถึงการประเมินหาระดับแนวรับที่สำคัญและเป้าหมายแนวต้านถัดไป โดยอ้างอิงทฤษฎีแนวรับแนวต้านและระดับนัยสำคัญของ Fibonacci และแนะนำแผนการเทรดที่รัดกุมสำหรับแนวโน้มปัจจุบัน`;
+  }
+
+  try {
+    const response = await callGeminiWithRetry(prompt, true);
+    const htmlOutput = marked.parse(response.text);
+    setDisplaySuccess(typeTitle, htmlOutput, response.groundings);
+  } catch (error) {
+    setDisplayError(error);
+  }
+}
+
+// วิเคราะห์พอร์ตจริงของคุณอย่างครอบคลุมจากข้อมูลตาราง My Portfolio
+async function auditMyPortfolio() {
+  const tickers = Object.keys(myHoldings);
+
+  if (tickers.length === 0) {
+    showToast("ไม่พบข้อมูลหุ้นในพอร์ตโฟลิโอของคุณ กรุณาเข้าไปเพิ่มรายการหุ้นซื้อจริงที่หน้า 'MY PORTFOLIO' ก่อน", "error");
+    return;
+  }
+
+  setDisplayLoading("กำลังวิเคราะห์ความหลากหลายและความเสี่ยงในพอร์ตรวมจริงของคุณ...");
+
+  let portDetailsText = "";
+  let totalCost = 0;
+  tickers.forEach(t => {
+    const item = myHoldings[t];
+    const cost = item.shares * item.avgCost;
+    totalCost += cost;
+    portDetailsText += `- หุ้น ${t}: ถือหุ้นจำนวน ${item.shares} หุ้น, ต้นทุนเฉลี่ยต่อหุ้น $${item.avgCost.toFixed(2)} (มูลค่าต้นทุนรวมในตัวนี้คือ $${cost.toFixed(2)})\n`;
+  });
+
+  const prompt = `ในฐานะที่ปรึกษาพอร์ตโฟลิโอมืออาชีพ กรุณาทำการตรวจสุขภาพพอร์ต (Portfolio Audit) และวิเคราะห์ความหลากหลายทางการลงทุนให้ฉัน ข้อมูลพอร์ตโฟลิโอของฉันมีมูลค่าต้นทุนรวมทั้งสิ้นประมาณ $${totalCost.toFixed(2)} โดยมีรายละเอียดสินทรัพย์ดังนี้:\n\n${portDetailsText}\n\nกรุณาช่วยประเมินเรื่องดังต่อไปนี้:\n1. **ความกระจุกตัวและความหลากหลายของความเสี่ยง (Concentration & Diversification):** พอร์ตนี้มีความเป็นเอกภาพหรือเสี่ยงเกินไปในตัวใดตัวหนึ่งหรือไม่?\n2. **การจัดหมวดหมู่กลุ่มธุรกิจ (Sector & Industry):** หุ้นเหล่านี้สังกัดกลุ่มอุตสาหกรรมใดบ้างและมีความสมดุลไหม?\n3. **การประเมินทิศทางรายตัว (Holdings Outlook):** แนวโน้มอนาคตของหุ้นหลักในพอร์ตแต่ละตัวเป็นอย่างดีตามข่าวสาร ณ วันนี้?\n4. **กลยุทธ์และคำแนะนำในการปรับพอร์ต (Actionable Recommendations):** ขั้นตอนต่อไปที่ฉันควรทำเพื่อปรับปรุงให้พอร์ตมีเสถียรภาพและสร้างผลตอบแทนสูงสุดคืออะไร?`;
+
+  try {
+    const response = await callGeminiWithRetry(prompt, true);
+    const htmlOutput = marked.parse(response.text);
+    setDisplaySuccess("MY PORTFOLIO - COMPREHENSIVE AI AUDIT", htmlOutput, response.groundings);
+  } catch (error) {
+    setDisplayError(error);
+  }
+}
+
+async function sendCustomQuery() {
+  const query = document.getElementById('ai-custom-prompt').value.trim();
+  if (!query) {
+    showToast("กรุณากรอกข้อความคำถามเพื่อคุยกับ AI", "error");
+    return;
+  }
+
+  setDisplayLoading("AI กำลังค้นหาข้อมูลและจัดเตรียมคำตอบที่ดีที่สุด...");
+  
+  try {
+    const response = await callGeminiWithRetry(query, true);
+    const htmlOutput = marked.parse(response.text);
+    setDisplaySuccess("AI EXPERT RESPONSE", htmlOutput, response.groundings);
+    
+    document.getElementById('ai-custom-prompt').value = '';
+  } catch (error) {
+    setDisplayError(error);
+  }
+}
+
+
+// --- ส่วนที่ 5: ระบบสลับหน้าแบบไร้รอยต่อ (Main Application Core System) ---
+function switchPage(pId) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(pId).classList.add('active');
+  document.getElementById('tab-' + pId).classList.add('active');
+}
+
+// อัปเดตราคาแบบวนซ้ำทุก ๆ 1 นาที (60 วินาที)
+setInterval(() => { 
+  updateAllHoldingPrices(); 
+  watchlistTickers.forEach(t => fetchWatchlistPrice(t));
+}, 60000);
+
 window.onload = () => {
-    renderPortfolio();
-    tickers.forEach(t => fetchPrice(t));
+  // โหลดหน้าจอที่ 1 (พอร์ตของฉัน)
+  renderHoldingsTable();
+  updateAllHoldingPrices();
+
+  // โหลดหน้าจอที่ 2 (Watchlist)
+  renderWatchlist();
+  watchlistTickers.forEach(t => fetchWatchlistPrice(t));
 };
 </script>
 </body>
