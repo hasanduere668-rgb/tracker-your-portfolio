@@ -157,20 +157,9 @@
   /* Info Notification bar */
   .info-banner { background: rgba(168, 85, 247, 0.1); border: 1px solid rgba(168, 85, 247, 0.2); padding: 12px 15px; border-radius: 6px; font-size: 12px; color: #d8b4fe; margin-bottom: 15px; line-height: 1.4; }
   .no-data { padding: 40px; text-align: center; color: var(--muted); font-size: 14px; }
-
-  /* Custom Toast System */
-  .toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
-  .toast { background: var(--surface); color: #fff; border-left: 4px solid var(--accent); padding: 15px 20px; border-radius: 4px; font-size: 14px; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); pointer-events: auto; animation: slideIn 0.3s ease-out forwards; max-width: 350px; }
-  .toast.success { border-left-color: var(--up); }
-  .toast.error { border-left-color: var(--down); }
-  .toast.info { border-left-color: var(--cyan); }
-  @keyframes slideIn { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 </style>
 </head>
 <body>
-
-<!-- สำหรับรับแจ้งเตือนของระบบแบบไร้การใช้ Alert -->
-<div id="toast-wrapper" class="toast-container"></div>
 
 <div class="wrapper">
   
@@ -393,24 +382,8 @@
 <script>
 // API Keys สำหรับเรียกข้อมูลและเปิดใช้ AI
 const FINNHUB_KEY = 'd82b00hr01qmgc0fd10gd82b00hr01qmgc0fd110';
-const apiKey = ""; // ปล่อยว่างไว้เพื่อใช้ Key อัตโนมัติจากสิ่งแวดล้อมรันไทม์
-const MODEL_NAME = "gemini-2.5-flash-preview-09-2025";
-
-// --- ฟังก์ชัน Custom Notification Toast เพื่อไม่ใช้งาน Browser Alert() ---
-function showToast(message, type = 'error') {
-  const container = document.getElementById('toast-wrapper');
-  const toast = document.createElement('div');
-  toast.className = `toast ${type}`;
-  toast.innerText = message;
-  container.appendChild(toast);
-  
-  setTimeout(() => {
-    toast.style.animation = 'slideIn 0.3s ease-out reverse';
-    setTimeout(() => {
-      toast.remove();
-    }, 300);
-  }, 4000);
-}
+const apiKey = "AIzaSyD5yALVWRKZw4ZJy2bGAMF0axx7JbJb_Gw";
+const MODEL_NAME = "gemini-2.5-flash";
 
 // --- ส่วนที่ 1: การจัดการพอร์ตจริง (Portfolio Holdings) ใน LocalStorage ---
 let myHoldings = JSON.parse(localStorage.getItem('my_holdings_list')) || {};
@@ -447,15 +420,15 @@ function addHolding() {
   const shares = parseFloat(document.getElementById('my-shares').value);
 
   if (!ticker) {
-    showToast("กรุณากรอกชื่อหุ้น", "error");
+    alert("กรุณากรอกชื่อหุ้น");
     return;
   }
   if (isNaN(cost) || cost <= 0) {
-    showToast("กรุณากรอกราคาต้นทุนให้ถูกต้อง", "error");
+    alert("กรุณากรอกราคาต้นทุนให้ถูกต้อง");
     return;
   }
   if (isNaN(shares) || shares <= 0) {
-    showToast("กรุณากรอกจำนวนหุ้นให้ถูกต้อง", "error");
+    alert("กรุณากรอกจำนวนหุ้นให้ถูกต้อง");
     return;
   }
 
@@ -471,16 +444,13 @@ function addHolding() {
   document.getElementById('my-ticker').value = '';
   document.getElementById('my-cost').value = '';
   document.getElementById('my-shares').value = '';
-  showToast(`บันทึกหุ้น ${ticker} ลงพอร์ตสำเร็จ`, "success");
 }
 
 function removeHolding(ticker) {
-  // สร้าง Dialog ยืนยันสไตล์โมเดิร์น
   if (confirm(`คุณต้องการลบหุ้น ${ticker} ออกจากพอร์ตรวมจริงใช่หรือไม่?`)) {
     delete myHoldings[ticker];
     saveHoldings();
     renderHoldingsTable();
-    showToast(`ลบหุ้น ${ticker} ออกจากรายการแล้ว`, "info");
   }
 }
 
@@ -619,7 +589,7 @@ function renderWatchlist() {
     return `<div class="stock-card ${cutInfo.status === 'st-cut' ? 'card-alert-red' : ''}">
       <button class="remove-btn" onclick="removeWatchlist('${t}')">×</button>
       <div class="ticker-large">${t}</div><div class="price-large">$${p.toFixed(2)}</div>
-      <img class="chart-img" src="https://charts2.finviz.com/chart.ashx?t=${t}&ty=c&ta=1&p=d&s=l" alt="chart" onerror="this.src='https://placehold.co/400x200/111/fff?text=No+Chart+Available'">
+      <img class="chart-img" src="https://charts2.finviz.com/chart.ashx?t=${t}&ty=c&ta=1&p=d&s=l" alt="chart">
       <table class="action-table">
         <thead><tr><th>แผนเทรด</th><th>เป้าหมาย</th><th>ระยะ %</th></tr></thead>
         <tbody>${levels.map(l => {
@@ -633,10 +603,7 @@ function renderWatchlist() {
 
 function addManualWatchlist() {
   const t = document.getElementById('t-m').value.toUpperCase().trim();
-  if(!t) {
-    showToast("กรุณากรอกชื่อย่อหุ้น (Ticker)", "error");
-    return;
-  }
+  if(!t) return;
   const data = {
     r3: document.getElementById('r3-m').value, r2: document.getElementById('r2-m').value, r1: document.getElementById('r1-m').value,
     s1: document.getElementById('s1-m').value, s2: document.getElementById('s2-m').value, s3: document.getElementById('s3-m').value,
@@ -655,7 +622,6 @@ function addManualWatchlist() {
   document.getElementById('s1-m').value = '';
   document.getElementById('s2-m').value = '';
   document.getElementById('s3-m').value = '';
-  showToast(`เพิ่มแผนเทรดของ ${t} ลงใน Fibo Watchlist สำเร็จ`, "success");
 }
 
 function removeWatchlist(t) {
@@ -664,7 +630,6 @@ function removeWatchlist(t) {
     delete watchlistCache[t];
     saveWatchlist(); 
     renderWatchlist();
-    showToast(`ลบหุ้น ${t} จาก Watchlist สำเร็จ`, "info");
   }
 }
 
@@ -674,11 +639,9 @@ let currentScanData = null;
 
 async function scanFibo() {
   const t = document.getElementById('t-scan').value.toUpperCase().trim();
-  if(!t) {
-    showToast("กรุณากรอกชื่อหุ้นที่ต้องการสแกน", "error");
-    return;
-  }
+  if(!t) return;
   
+  // โชว์ความเคลื่อนไหวจำลองตอนโหลดก่อนดึงข้อมูลสด
   document.getElementById('scan-result').style.display = 'none';
   
   try {
@@ -711,12 +674,11 @@ async function scanFibo() {
           return `<tr><td>${k.toUpperCase() === 'S3' ? 'คัท / S3 (50.0%)' : k.toUpperCase()}</td><td>$${v}</td><td class="${info.status}">${info.dist}</td></tr>`;
       }).join('');
       document.getElementById('scan-result').style.display = 'block';
-      showToast(`สแกน Auto-Fibo ของ ${t} สำเร็จ`, "success");
     } else {
-      showToast('ไม่พบข้อมูล Ticker ดังกล่าว กรุณาตรวจสอบและพิมพ์ใหม่อีกครั้ง', "error");
+      alert('ไม่พบข้อมูล Ticker ดังกล่าว กรุณาตรวจสอบและพิมพ์ใหม่อีกครั้ง');
     }
   } catch(e) { 
-    showToast('ระบบเซิร์ฟเวอร์ดึงข้อมูลล้มเหลว กรุณาลองใหม่อีกครั้ง', "error"); 
+    alert('ระบบเซิร์ฟเวอร์ดึงข้อมูลล้มเหลว กรุณาลองใหม่อีกครั้ง'); 
   }
 }
 
@@ -728,7 +690,6 @@ function transferToPortfolio() {
     saveWatchlist(); 
     renderWatchlist(); 
     switchPage('watchlist');
-    showToast(`ย้ายแผนของ ${t} ไปยังหน้า Fibo Watchlist เรียบร้อย`, "success");
 }
 
 
@@ -842,7 +803,7 @@ function resetViewport() {
 async function runAnalysis(type) {
   const ticker = document.getElementById('ai-ticker').value.toUpperCase().trim();
   if (!ticker) {
-    showToast("กรุณากรอกชื่อหุ้น (Ticker) ก่อนเริ่มต้นวิเคราะห์", "error");
+    alert("กรุณากรอกชื่อหุ้น (Ticker) ก่อนเริ่มต้นวิเคราะห์");
     return;
   }
 
@@ -877,7 +838,7 @@ async function auditMyPortfolio() {
   const tickers = Object.keys(myHoldings);
 
   if (tickers.length === 0) {
-    showToast("ไม่พบข้อมูลหุ้นในพอร์ตโฟลิโอของคุณ กรุณาเข้าไปเพิ่มรายการหุ้นซื้อจริงที่หน้า 'MY PORTFOLIO' ก่อน", "error");
+    alert("ไม่พบข้อมูลหุ้นในพอร์ตโฟลิโอของคุณ กรุณาเข้าไปเพิ่มรายการหุ้นซื้อจริงที่หน้า 'MY PORTFOLIO' ก่อน เพื่อเปิดใช้งานระบบวิเคราะห์อัจฉริยะ");
     return;
   }
 
@@ -906,7 +867,7 @@ async function auditMyPortfolio() {
 async function sendCustomQuery() {
   const query = document.getElementById('ai-custom-prompt').value.trim();
   if (!query) {
-    showToast("กรุณากรอกข้อความคำถามเพื่อคุยกับ AI", "error");
+    alert("กรุณากรอกข้อความคำถามเพื่อคุยกับ AI");
     return;
   }
 
